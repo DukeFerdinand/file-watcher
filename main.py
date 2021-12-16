@@ -11,9 +11,12 @@ class FileLooper:
 
     def __init__(self, c: dict):
         self.song_txt = c["song_file"]
-        self.mongo = MongoClient(c["db_string"])
         self.last_song = ""
         self.current_song = ""
+
+        self.mongo = MongoClient(c["db_string"])
+        self.db = self.mongo.get_default_database()
+        self.collection = self.db.get_collection('current_song')
 
     def check_and_log(self):
         try:
@@ -24,7 +27,22 @@ class FileLooper:
                 print("[loop] Got a new song!")
                 self.last_song = self.current_song
                 self.current_song = current_song
-                db = self.mongo.current_song
+
+                # last = self.last_song.split('-')
+                self.collection.find_one_and_replace(filter={"type": "last_song"},
+                                                     replacement={
+                                                         "type": "last_song",
+                                                         "song_string": self.last_song,
+                                                     },
+                                                     upsert=True
+                                                     )
+                self.collection.find_one_and_replace(filter={"type": "current_song"},
+                                                     replacement={
+                                                         "type": "current_song",
+                                                         "song_string": self.current_song,
+                                                     },
+                                                     upsert=True
+                                                     )
         except FileNotFoundError:
             print("Could not find the song TXT file!")
 
