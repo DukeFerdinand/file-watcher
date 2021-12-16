@@ -1,0 +1,4 @@
+pysimplegui
+pymongo
+python-dotenv
+dnspython
