@@ -21,7 +21,7 @@ class FileLooper:
     def check_and_log(self):
         try:
             print("[loop] Polling song TXT file...")
-            file = open("song.txt")
+            file = open(self.song_txt)
             current_song = file.readline()
             if self.current_song != current_song:
                 print("[loop] Got a new song!")
