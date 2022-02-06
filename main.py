@@ -1,6 +1,19 @@
 import json
+from multiprocessing import connection
 from time import sleep
+
+import paho.mqtt.client as mqtt
 from pymongo import MongoClient
+
+
+# The callback for when the client receives a CONNACK response from the server.
+def on_connect(_, __, ___, rc):
+    print("Connected with result code "+str(rc))
+
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    print(msg.topic+" "+str(msg.payload))
 
 
 class FileLooper:
@@ -17,6 +30,10 @@ class FileLooper:
         self.mongo = MongoClient(c["db_string"])
         self.db = self.mongo.get_default_database()
         self.collection = self.db.get_collection('current_song')
+
+        self.client = mqtt.Client()
+        self.client.on_connect = on_connect
+        self.client.on_message = on_message
 
     def check_and_log(self):
         try:
@@ -43,6 +60,13 @@ class FileLooper:
                                                      },
                                                      upsert=True
                                                      )
+                
+                # Send out the new heat to update on-screen heat level
+                print('[mqtt] sending out new-heat message')
+                self.client.connect("10.0.20.3", 5555, 60)
+                self.client.publish("new-heat", self.current_song)
+                self.client.disconnect()
+
         except FileNotFoundError:
             print("Could not find the song TXT file!")
 

@@ -2,3 +2,4 @@ pysimplegui
 pymongo
 python-dotenv
 dnspython
+paho-mqtt
